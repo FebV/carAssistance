@@ -26,6 +26,7 @@ class CreateCarsTable extends Migration
             $table->string('motor_status');
             $table->string('trans_status');
             $table->string('light_status');
+            //$table->int('curent_notification')->default(0);
             $table->timestamps();
         });
     }
