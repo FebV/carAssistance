@@ -1,0 +1,308 @@
+API document for carAssistance
+
+version 0.7     date:2016.05.30 21：00
+
+本版本（0.7）简介：
+现在api_token仅在第一次登陆时创建，在之后登陆中不改变，以方便多终端在线。
+新的查询车辆是否有异常接口，用以查询自己拥有的车是否有异常。
+
+本版本（0.6）简介：
+更新了新增车辆的接口，使其同时具有更新车辆信息的功能
+    现在会检查车架号（arch_no），若已经存在，自动变更为更新信息。
+
+新增错误
+    code：8
+    当车架号对应的车辆不属于想要更新该车信息的用户时会被返回。
+
+本版本（0.5）简介：
+新增获得用户头像的接口
+
+本版本（0.4）简介：
+新增获得订单二维码接口
+新增获得logo图片的接口
+新增上传车标的页面
+订单新增属性if_done
+
+本版本（0.3）简介：
+修改了注册用户时要提交的参数列表（增加email, realname, photo）
+修改了新增车辆时要提交的参数列表（增加arch_no, motor_no, light_status）
+现在获得用户信息接口可用
+现在获得全部车辆信息列表接口的返回值会提供完备的信息
+
+
+本版本（0.2）简介：
+修改了base_url
+增加了接口：
+    新增车辆信息
+    获得所有车辆信息
+
+本版本（0.1）简介：
+    初始版本，仅包括注册登陆两个功能，参数检查较宽松
+
+
+基础配置
+    base_url:
+        http://121.250.222.122/car/public   (会更换)
+
+    api_token有效时间：
+        当前为永远有效
+
+code返回值含义
+    0:      OK
+    1:      表单参数缺失或不合要求
+    2:      账号密码错误
+    3:      身份验证失败（api_token校验未通过）
+    4:      图片解析失败
+    5:      记录不存在
+    6:      图片未找到
+    7:      图片读取失败
+    8:      权限不足（车架号不属于你）
+
+格式规范
+    标准请求URL：
+        base_url+api_url
+
+    标准返回格式：
+        json_array
+            {
+                code：   请求状态（编码，以 ‘|’ 分割所有可能值，含义见"code返回值含义"）
+                status： 状态描述（中文语言），
+                result： 返回结果（若请求了相关资源，否则为空值，描述为null）
+            }
+
+    API标准描述格式
+        url：    表示api_url，拼接在base_url后构成请求url
+                例：   base_url = http://121.250.222.126/car/public
+                      api_url = user
+                则：   该接口请求的url应为 http://121.250.222.126/car/public/user
+        type:   请求方法，分为get|post|put|delete等几种
+        param:  该接口所需的参数，null表示无需参数
+        return: 该接口的返回值，格式为标准返回格式，×代表其含义如同标准返回格式中所写，null代表此处无值
+
+
+API：
+
+测试接口-----------------------------------------------------------------------
+①测试接口
+    url:    空（即直接使用base_url）
+    type:   get
+    param:  null
+    return:
+        code:   0
+        status: *
+        result: json array  (所有注册用户的id, username)
+        {
+            id：id
+            username:username
+        }
+
+认证相关-----------------------------------------------------------------------
+
+①注册新用户
+    url:    user
+    type:   post
+    param:
+        username(用户名称:必填，仅含字母，数据库不存在重复值，长度1~255)
+        password(密码：必填，长度1~255)
+        realname(用户姓名：必填)
+        email(用户邮箱，必填)
+        photo(用户头像，可选，使用base64格式编码)
+    return:
+        code:   0|1
+        status：×
+        result: null
+
+②用户登陆
+    url:    auth
+    type:   post
+    param:
+        username
+        password
+    return:
+        code:   0|2
+            0:  OK
+            2:  登陆信息错误
+        status: *
+        result:
+            [when code = 0] json array
+                                api_token   (授权信息，作为用户其他操作的凭证，需要保存)
+            [when code = 2] null
+
+
+
+用户信息相关--------------------------------------------------------------------
+
+①获得用户信息
+    url:    user/i
+    type:   get
+    param:
+        api_token(由登陆成功时的返回值获得)
+    return:
+        code:   0|3
+            0:  OK
+            3:  api_token错误
+        status: *
+        result:
+            [when code = 0] json array
+                                email   (邮箱)
+                                realname(用户姓名)
+                                photo   (用户头像url，若没有头像则返回字符串‘null’)
+            [when code = 3] null
+
+②获得用户头像
+    url:    user/i/photo
+    type:   get
+    param:
+        api_token
+    return:
+        [when success]
+            声明为png格式的图像
+        [else}
+            code:   3|6|7(具体原因在 "code返回值含义" 中说明)
+
+用户车辆相关----------------------------
+
+①新增车辆信息（以及更新车辆信息）
+    url:    user/i/car
+    type:   post
+    param:
+        api_token           (由登陆成功时的返回值获得)
+        brand               (品牌)
+        model               (型号)
+        car_no              (车牌号)
+        arch_no             (车架号)
+        motor_no            (发动机号)
+        distance            (里程数)
+        left_oil            (汽油量)
+        motor_status        (发动机状态)
+        trans_status        (变速器状态)
+        light_status        (车灯状态)
+    return:
+        code:   0|1|3|8
+        status: *
+        result:
+            [when code = 0] id  (车辆信息的id)
+            [else]  null
+
+②查询全部车辆信息列表
+    url:    user/i/car
+    type:   get
+    param:
+        api_token           (由登陆成功时的返回值获得)
+    return:
+        code:   0|3
+        status: *
+        result:
+            [when code = 0] json array
+                                id
+                                brand               (品牌)
+                                model               (型号)
+                                car_no              (车牌号)
+                                arch_no             (车架号)
+                                motor_no            (发动机号)
+                                distance            (里程数)
+                                left_oil            (汽油量)
+                                motor_status        (发动机状态)
+                                trans_status        (变速器状态)
+                                light_status        (车灯状态)
+            [else]  null
+
+③修改车辆信息
+    url:    user/i/car/{id}         (id为要修改的汽车id)
+    type:   put
+    param:
+        api_token           (必填)
+        [                   (选填参数列表，若含有该参数则更新记录，若无参数则保持原值)
+            brand
+            model
+            car_no
+            arch_no
+            motor_no
+            distance
+            left_oil
+            motor_status
+            trans_status
+            light_status
+        ]
+    return:
+        code:   0|1|3|5
+        status: *
+        result: null
+
+④查询车辆是否有异常
+    url:    user/i/car/status
+    type:   get
+    param:
+        api_token
+    return:
+        code:   0/3
+        status: *
+        result:
+            String: 错误信息|'全部正常'
+            （错误信息是一行可读字符串，每条错误信息之间以英文逗号隔开，末尾无符号。目前检查所有车辆的车灯、变速器、发动机状态，里程提醒暂未增加）
+
+
+订单相关-----------------------------------------------------------------------
+
+①新增订单
+    url:    user/i/order
+    type:   post
+    param:
+        api_token
+        oil_station     (加油站)
+        address         (地址)
+        oil_type        (汽油类型)
+        price           (汽油单价)
+        cost            (订单总价)
+    return:
+        code    0|1|3
+        status: *
+        result: null
+
+②查询所有订单
+    url:    user/i/order
+    type:   get
+    param:
+        api_token
+    return:
+        code:   0|3
+        status: *
+        result:
+            [when code = 0]:
+                json array
+                    {
+                        no              (订单编号, 20位)
+                        oil_station     (加油站)
+                        address         (地址)
+                        oil_type        (汽油类型)
+                        price           (汽油单价)
+                        cost            (订单总价)
+                        if_done         (订单是否完成了)
+                    }
+            [else]  null
+
+③获得订单对应二维码
+    url:    user/i/order/{id}/pic   (id为订单id，订单id由查询所有订单接口获得）
+    type:   get
+    param:
+        api_token
+    return:
+        [when success]  png格式的图片(图片中仅包含id信息)
+        [else]
+            code:   3
+            status: *
+            result: null
+
+辅助接口------------------------------------------------------------------------
+①获得品牌对应车标
+    url:    logo/{brand}        (brand为要获得车标的品牌)
+    type:   get
+    param:  null
+    return:
+        [when success]  jpg格式车标图片
+        [else]  code:   6
+                status: *
+                result: null
+
+②上传车标
+    url:    upload
