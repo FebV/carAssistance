@@ -87,9 +87,16 @@ class CarController extends Controller
 
           if($car->trans_status == '不正常' || $car->trans_status == '异常')
             $result_set[] = $car->brand.'品牌'.$car->model.'型号的车变速器状态异常';
+            
+          if($car->distance >= 15000*($car->current_notification+1))
+          {
+            $result_set[] = $car->brand.'品牌'.$car->model.'型号的车当前里程数已经达到'.$car->distance.'，建议您维护';
+            $car->current_notification++;
+            $car->save();
+          }
       }
       if(count($result_set) > 0)
-        return $this->stdResponse(0, implode($result_set, ','));
+          return $this->stdResponse(0, implode($result_set, ','));
       return $this->stdResponse(0, '全部正常');
     }
 
