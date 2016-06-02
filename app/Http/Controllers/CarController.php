@@ -80,20 +80,23 @@ class CarController extends Controller
       foreach ($cars as $car)
       {
           if($car->light_status == '不正常' || $car->light_status == '异常')
-          $result_set[] = '您的 '.$car->brand.$car->model.' 车灯状态异常';
+          $result_set[] = '「'.$car->brand.$car->model.'」车灯状态异常';
 
           if($car->motor_status == '不正常' || $car->motor_status == '异常')
-            $result_set[] = '您的 '.$car->brand.$car->model.' 发动机状态异常';
+            $result_set[] = '「'.$car->brand.$car->model.'」发动机状态异常';
 
           if($car->trans_status == '不正常' || $car->trans_status == '异常')
-            $result_set[] = '您的 '.$car->brand.$car->model.' 变速器状态异常';
+            $result_set[] = '「'.$car->brand.$car->model.'」变速器状态异常';
             
           if($car->distance >= 15000*($car->current_notification+1))
           {
-            $result_set[] = '您的 '.$car->brand.$car->model.' 当前里程数已经达到'.$car->distance.'，建议您维护';
+            $result_set[] = '「'.$car->brand.$car->model.'」当前里程数已经达到'.$car->distance.'，建议您维护';
             $car->current_notification++;
             $car->save();
           }
+          if($car->left_oil < 20)
+            $result_set[] = '「'.$car->brand.$car->model.'」剩余油量不足20%';
+
       }
       if(count($result_set) > 0)
           return $this->stdResponse(0, implode($result_set, ','));
