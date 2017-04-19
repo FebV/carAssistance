@@ -10,7 +10,12 @@
 | and give it the Closure to call when that URI is requested.
 |
 */
-define('BASE', 'car/public/');
+define('BASE', '/');
+$app->get(BASE.'test',
+    function(){
+        return "qwe";
+    }
+);
 
 $app->get(BASE.'', 'UserController@all_user');
 $app->post(BASE.'user', 'UserController@new_user');
