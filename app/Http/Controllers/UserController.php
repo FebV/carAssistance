@@ -19,7 +19,7 @@ class UserController extends Controller
     public function new_user(Request $request)
     {
         $res = $this->filter($request,[
-            'username' => 'required|unique:users|alpha',
+            'username' => 'required|unique:users',
             'password' => 'required',
             'realname' => 'required',
             'email' => 'required|email',
